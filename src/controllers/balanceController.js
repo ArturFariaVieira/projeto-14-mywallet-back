@@ -5,9 +5,12 @@ import dayjs from 'dayjs';
 
 export async function getRegistros(req, res) {
     let user = res.locals.user;
+    let total = 0;
     try {
         let registros = await db.collection("balance").find({ userid: ObjectId(user._id) }).toArray();
-        res.send(registros);
+        registros.forEach((registro) => registro.type == "E"? total = Number(total)+Number(registro.value): total = Number(total) -Number( registro.value))
+        total = total.toFixed(2);
+        res.send({registros, total});
     } catch (err) {
         console.log(err);
         res.sendStatus(500)
@@ -43,7 +46,7 @@ export async function editRegistro(req, res) {
 export async function deleteRegistro(req, res) {
     const { id } = req.params;
     try {
-        await db.collection("balance").deleteOne({ _id: new ObjectId(id) })
+        await db.collection("balance").deleteOne({ _id:  ObjectId(id) })
         res.sendStatus(200)
     } catch (error) {
         res.status(500).send(error)
